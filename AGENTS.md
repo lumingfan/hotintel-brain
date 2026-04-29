@@ -31,6 +31,11 @@
 - 每次 prompt / chain 改动都要留版本号和 diff 说明，eval 报告里能追溯
 - 涉及与 HotPulse 主项目的对接契约变更，必须同步回写到 `fullstack-product/docs/api/`
 
+## 协作偏好
+
+- 遇到首次拉取大体积 Docker 镜像、模型文件、系统依赖包等“下载耗时明显”的步骤时，assistant 默认**先给出命令**，由用户手动执行下载并在完成后通知，再继续后续操作
+- assistant 不应在这类场景下长时间自行阻塞式下载，除非用户明确要求代为执行
+
 ## 范围
 
 - `docs/`: specs / architecture / api / eval / runbook / adr

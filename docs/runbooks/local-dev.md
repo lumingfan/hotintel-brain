@@ -15,6 +15,8 @@
 
 V1 起就需要 Langfuse 跑起来，所有 LLM 调用都走 trace。
 
+如果是首次拉取这些重镜像（Langfuse / ClickHouse / Postgres / MinIO / Redis），默认由用户手动执行下载，assistant 只提供命令并在下载完成后继续后续步骤。
+
 ```bash
 # 当前仓库已提供 `infra/langfuse/compose.yaml`
 docker compose -f infra/langfuse/compose.yaml up -d

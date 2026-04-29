@@ -37,6 +37,7 @@ services:
       CLICKHOUSE_USER: clickhouse
       CLICKHOUSE_PASSWORD: clickhouse
       CLICKHOUSE_MIGRATION_URL: clickhouse://clickhouse:9000
+      CLICKHOUSE_CLUSTER_ENABLED: "false"
       REDIS_HOST: langfuse-redis
       REDIS_PORT: 6379
       REDIS_AUTH: redis
@@ -47,12 +48,21 @@ services:
       LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://langfuse-minio:9000
       LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
       # Replace these with locally generated secrets before running.
-      NEXTAUTH_SECRET: REPLACE_WITH_RANDOM_HEX
-      SALT: REPLACE_WITH_RANDOM_HEX
-      ENCRYPTION_KEY: REPLACE_WITH_64_HEX_CHARS
+      NEXTAUTH_SECRET: 7a86a38378c17b5da942b9b60be7ab036cc244c10b2d28a2634d4e49e5eed88e
+      SALT: bb93c687e64b876e4d485cf6b5cb234600ec036b3ece738aaad0beb098bda0bc
+      ENCRYPTION_KEY: 2e67bd54d8bc6496f0b0acbb86b2469f2cfc0a6bbafa6d74f6a9069cb065f8db
       NEXTAUTH_URL: http://localhost:3000
       TELEMETRY_ENABLED: "false"
       LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES: "false"
+      LANGFUSE_INIT_ORG_ID: org_hotintel_local
+      LANGFUSE_INIT_ORG_NAME: HotIntel Local
+      LANGFUSE_INIT_PROJECT_ID: project_hotintel_brain_local
+      LANGFUSE_INIT_PROJECT_NAME: hotintel-brain-local
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: pk-lf-local-hotintel-brain
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: sk-lf-local-446332a1a37a6568d348123a80443556fa914a219fc606ef
+      LANGFUSE_INIT_USER_EMAIL: lumingfan+langfuse@local.dev
+      LANGFUSE_INIT_USER_NAME: lumingfan
+      LANGFUSE_INIT_USER_PASSWORD: LangfuseLocal!2026
 
   langfuse-worker:
     image: langfuse/langfuse-worker:3
@@ -72,6 +82,7 @@ services:
       CLICKHOUSE_USER: clickhouse
       CLICKHOUSE_PASSWORD: clickhouse
       CLICKHOUSE_MIGRATION_URL: clickhouse://clickhouse:9000
+      CLICKHOUSE_CLUSTER_ENABLED: "false"
       REDIS_HOST: langfuse-redis
       REDIS_PORT: 6379
       REDIS_AUTH: redis
@@ -81,8 +92,8 @@ services:
       LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: minio123
       LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://langfuse-minio:9000
       LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
-      SALT: REPLACE_WITH_RANDOM_HEX
-      ENCRYPTION_KEY: REPLACE_WITH_64_HEX_CHARS
+      SALT: bb93c687e64b876e4d485cf6b5cb234600ec036b3ece738aaad0beb098bda0bc
+      ENCRYPTION_KEY: 2e67bd54d8bc6496f0b0acbb86b2469f2cfc0a6bbafa6d74f6a9069cb065f8db
       TELEMETRY_ENABLED: "false"
 
   langfuse-db:
@@ -126,17 +137,20 @@ services:
       retries: 10
 
   langfuse-minio:
-    image: minio/minio:RELEASE.2025-01-01T00-00-00Z
+    image: cgr.dev/chainguard/minio
     restart: unless-stopped
-    command: server /data
+    entrypoint: sh
+    command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
     environment:
       MINIO_ROOT_USER: minio
       MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9090:9000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 5s
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 1s
       timeout: 5s
-      retries: 10
+      retries: 5
     volumes:
       - langfuse-minio-data:/data
 
