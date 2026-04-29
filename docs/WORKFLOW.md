@@ -21,6 +21,7 @@
 - 每次 eval 跑分都落 `eval/reports/<date>-<title>.md`
 - 报告固定字段：数据集版本、模型、prompt 版本、指标、错例摘要、下一步
 - commit message 用 `eval:` 前缀，body 中带 prompt 版本号
+- 若是低成本 sanity / silver-label 报告，标题里明确标注 `sanity` 或 `silver`
 
 ## 与主项目交互
 

@@ -19,7 +19,7 @@ FULLSTACK_PRODUCT_ROOT = Path(
 )
 DEFAULT_BACKEND_ENV_PATH = FULLSTACK_PRODUCT_ROOT / "backend" / ".env.local"
 FALLBACK_BACKEND_ENV_PATH = FULLSTACK_PRODUCT_ROOT / "backend" / ".env.example"
-DEFAULT_OUTPUT_PATH = Path("data") / "sampled-v1.jsonl"
+DEFAULT_OUTPUT_PATH = Path("data") / "sampled-v1-20.jsonl"
 SOURCE_TARGETS = {
     "hackernews": 35,
     "bilibili": 35,
@@ -55,7 +55,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to fullstack-product backend .env file for local DB defaults.",
     )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH)
-    parser.add_argument("--limit", type=int, default=200)
+    parser.add_argument("--limit", type=int, default=20)
     parser.add_argument("--days", type=int, default=30)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--per-source", action="store_true")
@@ -144,6 +144,12 @@ def fetch_candidate_rows(config: DbConfig, *, days: int) -> list[dict[str, Any]]
             rd.collected_at,
             t.id AS topic_id,
             t.name AS topic_name,
+            hi.is_real,
+            hi.relevance_score,
+            hi.relevance_reason,
+            hi.keyword_mentioned,
+            hi.importance_level,
+            hi.summary AS hotspot_summary,
             COALESCE(
                 MAX(CASE WHEN tk.keyword_type = 'PRIMARY' THEN tk.keyword_text END),
                 SUBSTRING_INDEX(GROUP_CONCAT(tk.keyword_text ORDER BY tk.sort_order SEPARATOR '||'), '||', 1),
@@ -157,6 +163,9 @@ def fetch_candidate_rows(config: DbConfig, *, days: int) -> list[dict[str, Any]]
           ON st.id = rd.scan_task_id
         JOIN topic t
           ON t.id = st.topic_id
+        LEFT JOIN hotspot_item hi
+          ON hi.raw_document_id = rd.id
+         AND hi.topic_id = t.id
         LEFT JOIN topic_rule tr
           ON tr.topic_id = t.id
         LEFT JOIN topic_keyword tk
@@ -240,6 +249,14 @@ def build_sample_record(row: dict[str, Any]) -> dict[str, Any]:
             "relevanceBucket": None,
         },
         "labelerNotes": "",
+        "baselineHints": {
+            "isReal": row.get("is_real"),
+            "importance": row.get("importance_level"),
+            "summary": row.get("hotspot_summary") or "",
+            "keywordMentioned": row.get("keyword_mentioned"),
+            "relevanceScore": row.get("relevance_score"),
+            "relevanceReason": row.get("relevance_reason"),
+        },
         "samplingMetadata": {
             "sourceCode": row["source_code"],
             "collectedAt": row["collected_at"].isoformat() if row.get("collected_at") else None,

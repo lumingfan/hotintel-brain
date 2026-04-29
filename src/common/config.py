@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     langfuse_host: str = Field(default="http://localhost:3000")
     langfuse_public_key: str = Field(default="")
     langfuse_secret_key: str = Field(default="")
+    langfuse_prompt_fetch_enabled: bool = Field(default=False)
 
     # ----- Elasticsearch (V2 起用) -----
     brain_es_url: str = Field(default="")

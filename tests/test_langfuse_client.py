@@ -61,6 +61,8 @@ def test_get_prompt_definition_uses_langfuse_prompt_when_available(
         "src.observability.langfuse_client.get_langfuse_client",
         lambda: FakeClient(),
     )
+    monkeypatch.setenv("LANGFUSE_PROMPT_FETCH_ENABLED", "true")
+    get_settings.cache_clear()
 
     prompt = get_prompt_definition(
         "judge",

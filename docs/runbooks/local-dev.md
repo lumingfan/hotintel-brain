@@ -43,6 +43,7 @@ cp .env.example .env
 #   LANGFUSE_HOST=http://localhost:3000
 #   LANGFUSE_PUBLIC_KEY=...
 #   LANGFUSE_SECRET_KEY=...
+#   LANGFUSE_PROMPT_FETCH_ENABLED=false
 
 # 起服务
 uvicorn src.api.main:app --port 8090 --reload
@@ -93,8 +94,8 @@ curl -s http://localhost:8090/v1/summarize \
 
 ```bash
 .venv/bin/python scripts/sample_from_hotpulse.py \
-  --output data/sampled-v1.jsonl \
-  --limit 80 \
+  --output data/sampled-v1-20.jsonl \
+  --limit 20 \
   --days 30 \
   --per-source
 ```

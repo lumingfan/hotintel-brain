@@ -70,6 +70,15 @@ def get_prompt_definition(
     """Prefer Langfuse prompt management, with local markdown fallback."""
 
     fallback_version, fallback_text = load_markdown_prompt(fallback_path, default_version)
+    settings = get_settings()
+    if not settings.langfuse_prompt_fetch_enabled:
+        return PromptDefinition(
+            name=prompt_name,
+            version=fallback_version,
+            text=fallback_text,
+            source="local",
+        )
+
     client = get_langfuse_client()
     if client is None:
         return PromptDefinition(
@@ -86,7 +95,8 @@ def get_prompt_definition(
             fallback=fallback_text,
         )
         prompt_text = prompt_client.compile()
-        prompt_version = str(getattr(prompt_client, "version", fallback_version))
+        raw_version = getattr(prompt_client, "version", None)
+        prompt_version = fallback_version if raw_version in (None, 0, "0") else str(raw_version)
         return PromptDefinition(
             name=prompt_name,
             version=prompt_version,
@@ -140,6 +150,10 @@ def generation_trace(
 
     with observation:
         yield client.get_current_trace_id()
+    try:
+        client.flush()
+    except Exception:  # pragma: no cover - defensive fallback
+        _log.warning("Failed to flush Langfuse client after observation.", exc_info=True)
 
 
 def update_generation_success(

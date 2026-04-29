@@ -16,8 +16,11 @@
   - 已支持 OpenAI-compatible `OPENAI_BASE_URL`；用本地网关 `http://localhost:17654/v1` + `gpt-4o-mini` 跑过真实 judge / summarize smoke
   - `src/observability/langfuse_client.py` 已接通真实 `is_reachable()`、prompt fallback、generation trace wrapper；缺 Langfuse key 时自动退回本地 prompt + `traceId=null`
   - `eval/harness.py` + `eval/metrics.py` + `scripts/sample_from_hotpulse.py` 已起最小 scaffold，能在 mock runner 下生成报告骨架
-  - 已从 `fullstack-product` 本地 MySQL 真实抽出 `data/sampled-v1.jsonl`（80 条、待人工标注，不进 git）
-  - 已产出第一份 engineering-only sanity baseline：`eval/reports/2026-04-29-sampled-v1-l1-baseline.md`
+  - Langfuse self-hosted 已在本机部署成功，`http://localhost:3000/api/public/health` 返回 `OK`；`judge` / `summarize` 都已返回真实 `traceId`
+  - 已从 `fullstack-product` 本地 MySQL 真实抽出 `data/sampled-v1-20.jsonl`（20 条、待人工标注，不进 git，按来源均衡 4×5）
+  - 样本中已带 `baselineHints`（来自主项目现有 `hotspot_item` / 规则路径输出），用于降低人工标注成本
+  - 已产出 20 条 engineering baseline：`eval/reports/2026-04-30-sampled-v1-20-l1-baseline.md`
+  - 已产出 20 条 silver-label sanity report：`eval/reports/2026-04-30-sampled-v1-20-silver-baseline.md`
   - 测试已覆盖 route 无 key、成功透传、schema 降级、timeout / rate limit 映射、Langfuse health/prompt fallback、eval harness smoke
 - **技术栈与功能切片均已锁定（2026-04-27 第二轮）**：
   - 栈：Python 3.11 + uv + ruff + FastAPI + Pydantic v2 + `instructor` + LiteLLM + `Pydantic AI` + Elasticsearch (shared) + bge-large-zh + bge-reranker-v2-m3 + Langfuse + DeepEval + ragas + 自写 metric
@@ -41,28 +44,27 @@
   - `src/chains/summarize_singleshot.py`（summarize prompt 读取 + 成功包装）
   - `src/llm/client.py`（V1 模型白名单 + 可达性检查 + judge/summarize structured-call + timeout/rate-limit 规范化）
   - `src/observability/langfuse_client.py`（真实 health ping + prompt fallback + generation trace wrapper）
-  - `eval/harness.py` + `eval/metrics.py` + `eval/reports/.gitkeep`
+  - `eval/harness.py` + `eval/metrics.py` + `eval/silver_metrics.py` + `eval/run.py` + `eval/run_silver.py` + `eval/reports/.gitkeep`
   - `scripts/sample_from_hotpulse.py`（CLI shell）
   - `prompts/judge_v1.md` + `prompts/summarize_v1.md`（含 frontmatter / 校准提示 / changelog）
-  - `tests/test_health.py` / `tests/test_llm_client.py` / `tests/test_models.py` / `tests/test_judge.py` / `tests/test_summarize.py` / `tests/test_judge_smoke.py` / `tests/test_langfuse_client.py` / `tests/test_eval_harness.py` / `tests/conftest.py`
+  - `tests/test_health.py` / `tests/test_llm_client.py` / `tests/test_models.py` / `tests/test_judge.py` / `tests/test_summarize.py` / `tests/test_judge_smoke.py` / `tests/test_langfuse_client.py` / `tests/test_eval_harness.py` / `tests/test_sample_from_hotpulse.py` / `tests/test_silver_metrics.py` / `tests/conftest.py`
   - 当前 `pytest` 全量可通过
-- **当前仍未做完（第二批后续）**：Langfuse 真实 trace 验证（需 key）、80 条样本人工标注、带质量指标的正式 baseline report
+- **当前仍未做完（第二批后续）**：20 条样本人工复核 / 定标、带人工标签的正式 baseline report、`fullstack-product` 的 `T-034` Brain HTTP stub 联调
 
 ## 进行中
 
 - V1 第二批正在推进，当前还需要用户在本地补齐：
   1. 按 `infra/langfuse/README.md` 起 Langfuse 自托管，拿到 publicKey / secretKey
   2. 如果要继续走本地 OpenAI-compatible 网关，准备 `OPENAI_API_KEY` + `OPENAI_BASE_URL=http://localhost:17654/v1`
-  3. 标注集抽样来源和连接信息（供 `scripts/sample_from_hotpulse.py` 实现真实采样）
+  3. 20 条 sanity set 的人工复核时间
 
 ## 下一步（V1 第二批）
 
 在当前切片基础上继续推进。后续内容：
 
-1. 用 Langfuse key 跑一次真实 trace，确认 `traceId` 能在 UI 里检索
-2. 对 `data/sampled-v1.jsonl` 做人工标注，先完成 80 条 sanity set
-3. 在已标注样本上跑正式 baseline，补齐 importance / isReal / summary 指标
-4. HotPulse `T-034` 同步起步（在 fullstack-product 仓里做）
+1. 对 `data/sampled-v1-20.jsonl` 做人工复核 / 定标，先完成 20 条 sanity set
+2. 在已定标样本上跑正式 baseline，补齐 importance / isReal / summary 指标
+3. HotPulse `T-034` 同步起步（在 fullstack-product 仓里做）
 
 V2 / V3 / V4 待 V1 评测稳定后启动，不预支。
 

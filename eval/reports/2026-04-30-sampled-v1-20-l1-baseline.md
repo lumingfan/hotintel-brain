@@ -2,23 +2,23 @@
 
 ## Metadata
 
-- Dataset version: `sampled-v1`
+- Dataset version: `sampled-v1-20`
 - Layer: `L1`
 - Model: `gpt-4o-mini`
 - Prompt version: `judge-v1.0`
 
 ## Summary
 
-- Total samples: `80`
-- Success count: `80`
+- Total samples: `20`
+- Success count: `20`
 - Partial rate: `0.00%`
 
 ## Engineering Metrics
 
-- p50 latency (ms): `5589`
-- p95 latency (ms): `8052`
-- avg total tokens: `1333.36`
-- max total tokens: `1933`
+- p50 latency (ms): `5098`
+- p95 latency (ms): `9086`
+- avg total tokens: `1320.65`
+- max total tokens: `1476`
 
 ## Quality Metrics
 
