@@ -123,17 +123,23 @@ def is_model_reachable(name: str | None = None) -> bool:
     return False
 
 
-def _provider_completion_kwargs(model_name: str) -> dict[str, str]:
+def _provider_completion_kwargs(model_name: str) -> dict[str, object]:
     settings = get_settings()
     descriptor = resolve_model(model_name)
     if descriptor.provider is Provider.OPENAI:
-        kwargs = {"api_key": settings.openai_api_key}
+        kwargs = {
+            "api_key": settings.openai_api_key,
+            "timeout": settings.brain_llm_timeout_seconds,
+        }
         if settings.openai_base_url:
             kwargs["base_url"] = settings.openai_base_url
         return kwargs
     if descriptor.provider is Provider.ANTHROPIC:
-        return {"api_key": settings.anthropic_api_key}
-    return {"api_key": ""}
+        return {
+            "api_key": settings.anthropic_api_key,
+            "timeout": settings.brain_llm_timeout_seconds,
+        }
+    return {"api_key": "", "timeout": settings.brain_llm_timeout_seconds}
 
 
 def _build_async_instructor_client(model_name: str) -> instructor.AsyncInstructor:

@@ -58,6 +58,7 @@ Observability   Langfuse (self-hosted)
 - 方向已锁定 + 栈与功能切片已锁定 + 6 份 ADR 全部 Accepted
 - **V1 第一批骨架已落地**（2026-04-27）：`pytest` + `uvicorn` 可跑通，`/v1/health` 端点工作，无需任何 API key 即可验证
 - **V1 第二批已推进到 L1 闭环骨架**（2026-04-29）：`POST /v1/judge` 与 `POST /v1/summarize` 已接到 chain，OpenAI-compatible `OPENAI_BASE_URL` 已支持，`gpt-4o-mini` 本地网关 smoke 已跑通
+- **L1 收尾已进入真实数据阶段**（2026-04-29）：已从 `fullstack-product` 本地 MySQL 真实抽出 80 条待标注样本，并生成一份 80 条 engineering-only sanity baseline 报告
 - Langfuse health ping / prompt fallback / trace wrapper、错误映射和 eval scaffold 已落地；真正的 Langfuse trace 验证与第一份 baseline 报告仍待 Langfuse key 与标注集配齐
 - 当前不做：独立微调 / 蒸馏 / 训练；不引入 Milvus / Qdrant（V3 才考虑 Milvus ablation）
 

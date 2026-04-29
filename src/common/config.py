@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     brain_default_model: str = Field(default="gpt-4o-mini")
     brain_default_layer: str = Field(default="L1")
     brain_log_level: str = Field(default="INFO")
+    brain_llm_timeout_seconds: int = Field(default=20)
 
     # ----- LLM providers (ADR 0006: V1 = GPT + Claude) -----
     openai_api_key: str = Field(default="")

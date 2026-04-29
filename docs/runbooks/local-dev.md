@@ -87,6 +87,16 @@ curl -s http://localhost:8090/v1/summarize \
   -d @summarize-sample.json | jq
 ```
 
+真实抽样示例：
+
+```bash
+.venv/bin/python scripts/sample_from_hotpulse.py \
+  --output data/sampled-v1.jsonl \
+  --limit 80 \
+  --days 30 \
+  --per-source
+```
+
 ## 4. 与 HotPulse 联调
 
 V1 默认走同步 HTTP：
