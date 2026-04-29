@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.env
+.env.*
+!.env.example
+*.egg-info/
+build/
+dist/
+
+# Eval data & local artefacts
+data/
+eval/datasets/
+eval/runs/
+models/
+*.jsonl
+!eval/reports/*.md
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# Logs
+*.log
+logs/

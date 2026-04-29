@@ -1,0 +1,89 @@
+[project]
+name = "hotintel-brain"
+version = "0.1.0"
+description = "HotIntel Brain — LLM-driven hot-intel judgement service for the HotPulse platform"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { text = "Proprietary" }
+authors = [{ name = "lumingfan" }]
+
+# V1 dependencies. Keep this short.
+# - LLM provider scope follows ADR 0006 (GPT + Claude only).
+# - RAG / Pydantic AI / DeepEval are deferred to V2/V3 and intentionally NOT in V1.
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "instructor>=1.6",
+    "litellm>=1.55",
+    "openai>=1.55",
+    "anthropic>=0.40",
+    "langfuse>=2.55",
+    "httpx>=0.27",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "respx>=0.21",
+    "ruff>=0.7",
+    "mypy>=1.13",
+]
+
+# V2 / V3 / V4 will add their own optional groups (rag / agent / eval / feedback)
+# but we intentionally don't install them in V1.
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+# ----------------------------------------------------------------------
+# Tooling
+# ----------------------------------------------------------------------
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["data", "eval/datasets", "eval/runs", "infra"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "RUF", # ruff-specific
+]
+ignore = [
+    "E501",  # line too long (covered by formatter)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E402", "F401"]
+"src/common/models.py" = ["N803", "N815"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-q --strict-markers --strict-config"
+asyncio_mode = "auto"
+pythonpath = ["."]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true

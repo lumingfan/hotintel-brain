@@ -1,0 +1,147 @@
+# Langfuse self-hosted compose.
+#
+# This is a placeholder skeleton based on Langfuse v3 self-hosting docs:
+#   https://langfuse.com/self-hosting/docker-compose
+#
+# Steps when actually starting this:
+#   1. Generate secrets locally (openssl rand -hex 32) and fill in the placeholder
+#      values below. Do NOT commit real secrets.
+#   2. Run `docker compose -f infra/langfuse/compose.yaml up -d`.
+#   3. Open http://localhost:3000, register an admin account, create a project.
+#   4. Copy the project's publicKey + secretKey into the parent `.env`
+#      (LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY).
+#
+# Notes:
+#   - Langfuse v3 requires Postgres + ClickHouse + Redis + MinIO. Resource: ~1GB RAM.
+#   - Pin image versions before relying on this in serious work.
+#   - Adjust ports if 3000 / 5432 / 8123 collide with HotPulse compose.
+
+services:
+  langfuse-web:
+    image: langfuse/langfuse:3
+    restart: unless-stopped
+    depends_on:
+      langfuse-db:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      langfuse-redis:
+        condition: service_healthy
+      langfuse-minio:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@langfuse-db:5432/postgres
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse
+      CLICKHOUSE_MIGRATION_URL: clickhouse://clickhouse:9000
+      REDIS_HOST: langfuse-redis
+      REDIS_PORT: 6379
+      REDIS_AUTH: redis
+      LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: auto
+      LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: minio
+      LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: minio123
+      LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://langfuse-minio:9000
+      LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+      # Replace these with locally generated secrets before running.
+      NEXTAUTH_SECRET: REPLACE_WITH_RANDOM_HEX
+      SALT: REPLACE_WITH_RANDOM_HEX
+      ENCRYPTION_KEY: REPLACE_WITH_64_HEX_CHARS
+      NEXTAUTH_URL: http://localhost:3000
+      TELEMETRY_ENABLED: "false"
+      LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES: "false"
+
+  langfuse-worker:
+    image: langfuse/langfuse-worker:3
+    restart: unless-stopped
+    depends_on:
+      langfuse-db:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      langfuse-redis:
+        condition: service_healthy
+      langfuse-minio:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@langfuse-db:5432/postgres
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse
+      CLICKHOUSE_MIGRATION_URL: clickhouse://clickhouse:9000
+      REDIS_HOST: langfuse-redis
+      REDIS_PORT: 6379
+      REDIS_AUTH: redis
+      LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: auto
+      LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: minio
+      LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: minio123
+      LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://langfuse-minio:9000
+      LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+      SALT: REPLACE_WITH_RANDOM_HEX
+      ENCRYPTION_KEY: REPLACE_WITH_64_HEX_CHARS
+      TELEMETRY_ENABLED: "false"
+
+  langfuse-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - langfuse-db-data:/var/lib/postgresql/data
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.3
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8123/ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - clickhouse-logs:/var/log/clickhouse-server
+
+  langfuse-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --requirepass redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  langfuse-minio:
+    image: minio/minio:RELEASE.2025-01-01T00-00-00Z
+    restart: unless-stopped
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - langfuse-minio-data:/data
+
+volumes:
+  langfuse-db-data:
+  clickhouse-data:
+  clickhouse-logs:
+  langfuse-minio-data:
