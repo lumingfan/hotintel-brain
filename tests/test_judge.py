@@ -103,6 +103,45 @@ def test_judge_returns_chain_result(
     assert body["partial"] is False
 
 
+def test_judge_l2_uses_rag_chain(
+    monkeypatch: pytest.MonkeyPatch,
+    client: TestClient,
+) -> None:
+    async def fake_run_judge_l2(request: JudgeRequest) -> JudgementResult:
+        assert request.rawDocument.id == "rd_001"
+        output = JudgementOutput(
+            relevanceScore=88,
+            isReal=True,
+            isRealConfidence=0.8,
+            importance=ImportanceLevel.HIGH,
+            summary="retrieved context summary",
+            keywordMentioned=True,
+            reasoning="reranked history confirmed the signal",
+            expandedKeywords=["Anthropic MCP"],
+        )
+        return JudgementResult.from_output(
+            rawDocumentId=request.rawDocument.id,
+            layer=JudgementLayer.L2,
+            model="gpt-4o-mini",
+            promptVersion="judge-v1.0",
+            output=output,
+            latencyMs=612,
+            tokenUsage=TokenUsage(promptTokens=700, completionTokens=120, totalTokens=820),
+            traceId="br_l2",
+        )
+
+    monkeypatch.setattr("src.api.routes_judge.run_judge_l2", fake_run_judge_l2)
+
+    payload = _sample_judge_request()
+    payload["forceLayer"] = "L2"
+    response = client.post("/v1/judge", json=payload)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["layer"] == "L2"
+    assert body["summary"] == "retrieved context summary"
+
+
 @pytest.mark.asyncio
 async def test_run_judge_wraps_llm_output(monkeypatch: pytest.MonkeyPatch) -> None:
     async def fake_judge_document(

@@ -7,9 +7,14 @@ import logging
 from fastapi import FastAPI
 
 from src import __version__
+from src.api.routes_aggregate_hint import router as aggregate_hint_router
+from src.api.routes_embed import router as embed_router
+from src.api.routes_expand import router as expand_router
 from src.api.routes_health import router as health_router
 from src.api.routes_judge import router as judge_router
+from src.api.routes_judge_batch import router as judge_batch_router
 from src.api.routes_summarize import router as summarize_router
+from src.api.routes_triage_hint import router as triage_hint_router
 from src.common.config import get_settings
 from src.observability.langfuse_client import trace_disabled_warning
 
@@ -32,7 +37,12 @@ def create_app() -> FastAPI:
     )
     app.include_router(health_router, prefix="/v1")
     app.include_router(judge_router, prefix="/v1")
+    app.include_router(judge_batch_router, prefix="/v1")
     app.include_router(summarize_router, prefix="/v1")
+    app.include_router(embed_router, prefix="/v1")
+    app.include_router(expand_router, prefix="/v1")
+    app.include_router(aggregate_hint_router, prefix="/v1")
+    app.include_router(triage_hint_router, prefix="/v1")
     return app
 
 

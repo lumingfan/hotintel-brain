@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     brain_default_layer: str = Field(default="L1")
     brain_log_level: str = Field(default="INFO")
     brain_llm_timeout_seconds: int = Field(default=20)
+    brain_embed_model_path: str = Field(default="models/bge-m3")
+    brain_rerank_model_path: str = Field(default="models/bge-reranker-v2-m3")
+    brain_device: str = Field(default="auto")
+    brain_rabbitmq_url: str = Field(default="")
+    brain_es_index_name: str = Field(default="hotspot_search")
 
     # ----- LLM providers (ADR 0006: V1 = GPT + Claude) -----
     openai_api_key: str = Field(default="")

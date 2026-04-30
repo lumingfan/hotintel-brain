@@ -9,15 +9,23 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 from time import perf_counter
-from typing import Any
+from typing import Any, TypeVar
 
 import instructor
 import litellm
 from instructor.core import InstructorRetryException, ValidationError
 from litellm import acompletion
+from pydantic import BaseModel
 
 from src.common.config import get_settings
-from src.common.models import JudgementOutput, SummarizeOutput, TokenUsage
+from src.common.models import (
+    AggregateHintVerdict,
+    JudgementOutput,
+    SummarizeOutput,
+    TokenUsage,
+    TriageHintAlternative,
+    TriageStatus,
+)
 from src.observability.langfuse_client import (
     PromptDefinition,
     generation_trace,
@@ -86,6 +94,28 @@ class UpstreamTimeoutError(RuntimeError):
 
 class UpstreamRateLimitError(RuntimeError):
     """LLM provider rejected the request due to rate limiting."""
+
+
+class ExpandOutput(BaseModel):
+    expandedKeywords: list[str]
+
+
+class AggregateHintOutput(BaseModel):
+    decision: AggregateHintVerdict
+    matchedEventId: str | None = None
+    confidence: float
+    reasoning: str
+    alternativeMatches: list[str] = []
+
+
+class TriageHintOutput(BaseModel):
+    recommendedTriageStatus: TriageStatus
+    confidence: float
+    reasoning: str
+    alternativeStatuses: list[TriageHintAlternative] = []
+
+
+StructuredResponseModelT = TypeVar("StructuredResponseModelT", bound=BaseModel)
 
 
 def supported_model_names() -> list[str]:
@@ -181,15 +211,15 @@ def _extract_token_usage(raw_completion: Any) -> TokenUsage:
     )
 
 
-async def judge_document(
+async def _structured_completion(
     *,
+    trace_name: str,
+    response_model: type[StructuredResponseModelT],
     model_name: str,
     system_prompt: str,
     user_prompt: str,
     prompt_definition: PromptDefinition,
-) -> tuple[JudgementOutput, TokenUsage, int, str | None]:
-    """Run the V1 judge prompt through instructor + LiteLLM."""
-
+) -> tuple[StructuredResponseModelT, TokenUsage, int, str | None]:
     completion_kwargs = _provider_completion_kwargs(model_name)
     api_key = completion_kwargs["api_key"]
     if not api_key:
@@ -198,14 +228,14 @@ async def judge_document(
     client = _build_async_instructor_client(model_name)
     started_at = perf_counter()
     with generation_trace(
-        name="judge",
+        name=trace_name,
         model=model_name,
         prompt_definition=prompt_definition,
         input_payload={"system": system_prompt, "user": user_prompt},
     ) as trace_id:
         try:
             output, raw_completion = await client.create_with_completion(
-                response_model=JudgementOutput,
+                response_model=response_model,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
@@ -229,6 +259,24 @@ async def judge_document(
         token_usage = _extract_token_usage(raw_completion)
         update_generation_success(output=output.model_dump(), token_usage=token_usage)
         return output, token_usage, latency_ms, trace_id
+
+
+async def judge_document(
+    *,
+    model_name: str,
+    system_prompt: str,
+    user_prompt: str,
+    prompt_definition: PromptDefinition,
+) -> tuple[JudgementOutput, TokenUsage, int, str | None]:
+    """Run the V1 judge prompt through instructor + LiteLLM."""
+    return await _structured_completion(
+        trace_name="judge",
+        response_model=JudgementOutput,
+        model_name=model_name,
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        prompt_definition=prompt_definition,
+    )
 
 
 async def summarize_document(
@@ -239,43 +287,62 @@ async def summarize_document(
     prompt_definition: PromptDefinition,
 ) -> tuple[SummarizeOutput, TokenUsage, int, str | None]:
     """Run the V1 summarize prompt through instructor + LiteLLM."""
-
-    completion_kwargs = _provider_completion_kwargs(model_name)
-    api_key = completion_kwargs["api_key"]
-    if not api_key:
-        raise ModelUnavailableError(model_name)
-
-    client = _build_async_instructor_client(model_name)
-    started_at = perf_counter()
-    with generation_trace(
-        name="summarize",
-        model=model_name,
+    return await _structured_completion(
+        trace_name="summarize",
+        response_model=SummarizeOutput,
+        model_name=model_name,
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
         prompt_definition=prompt_definition,
-        input_payload={"system": system_prompt, "user": user_prompt},
-    ) as trace_id:
-        try:
-            output, raw_completion = await client.create_with_completion(
-                response_model=SummarizeOutput,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                model=model_name,
-                max_retries=1,
-                **completion_kwargs,
-            )
-        except litellm.Timeout as exc:
-            update_generation_error(error_message=str(exc))
-            raise UpstreamTimeoutError(str(exc)) from exc
-        except litellm.RateLimitError as exc:
-            update_generation_error(error_message=str(exc))
-            raise UpstreamRateLimitError(str(exc)) from exc
-        except (InstructorRetryException, ValidationError) as exc:
-            raw_output = _stringify_raw_completion(getattr(exc, "last_completion", None))
-            update_generation_error(error_message=str(exc), raw_output=raw_output)
-            raise StructuredOutputError(str(exc), raw_model_output=raw_output) from exc
+    )
 
-        latency_ms = int((perf_counter() - started_at) * 1000)
-        token_usage = _extract_token_usage(raw_completion)
-        update_generation_success(output=output.model_dump(), token_usage=token_usage)
-        return output, token_usage, latency_ms, trace_id
+
+async def expand_keywords(
+    *,
+    model_name: str,
+    system_prompt: str,
+    user_prompt: str,
+    prompt_definition: PromptDefinition,
+) -> tuple[ExpandOutput, TokenUsage, int, str | None]:
+    return await _structured_completion(
+        trace_name="expand",
+        response_model=ExpandOutput,
+        model_name=model_name,
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        prompt_definition=prompt_definition,
+    )
+
+
+async def aggregate_hint(
+    *,
+    model_name: str,
+    system_prompt: str,
+    user_prompt: str,
+    prompt_definition: PromptDefinition,
+) -> tuple[AggregateHintOutput, TokenUsage, int, str | None]:
+    return await _structured_completion(
+        trace_name="aggregate-hint",
+        response_model=AggregateHintOutput,
+        model_name=model_name,
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        prompt_definition=prompt_definition,
+    )
+
+
+async def triage_hint(
+    *,
+    model_name: str,
+    system_prompt: str,
+    user_prompt: str,
+    prompt_definition: PromptDefinition,
+) -> tuple[TriageHintOutput, TokenUsage, int, str | None]:
+    return await _structured_completion(
+        trace_name="triage-hint",
+        response_model=TriageHintOutput,
+        model_name=model_name,
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        prompt_definition=prompt_definition,
+    )

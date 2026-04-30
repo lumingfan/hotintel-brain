@@ -43,6 +43,20 @@ class SummaryLengthHint(StrEnum):
     LONG = "long"
 
 
+class AggregateHintVerdict(StrEnum):
+    MERGE_INTO_EXISTING = "MERGE_INTO_EXISTING"
+    CREATE_NEW = "CREATE_NEW"
+    UNCERTAIN = "UNCERTAIN"
+
+
+class TriageStatus(StrEnum):
+    NEW = "NEW"
+    REVIEWING = "REVIEWING"
+    CONFIRMED = "CONFIRMED"
+    DISMISSED = "DISMISSED"
+    ARCHIVED = "ARCHIVED"
+
+
 # ----------------------------------------------------------------------
 # Inputs
 # ----------------------------------------------------------------------
@@ -78,6 +92,61 @@ class JudgeRequest(BaseModel):
     forceModel: str | None = None
 
 
+class JudgeBatchItem(BaseModel):
+    rawDocument: RawDocument
+    topicContext: TopicContext
+
+
+class JudgeBatchRequest(BaseModel):
+    items: list[JudgeBatchItem] = Field(min_length=1)
+    forceLayer: JudgementLayer | None = None
+    forceModel: str | None = None
+    maxConcurrency: int = Field(default=4, ge=1, le=16)
+
+
+class EmbedRequest(BaseModel):
+    texts: list[str] = Field(min_length=1)
+    topicId: str | None = None
+
+
+class ExpandRequest(BaseModel):
+    topicId: str
+    topicName: str
+    primaryKeyword: str
+    existingExpandedKeywords: list[str] = Field(default_factory=list)
+    limit: int = Field(default=10, ge=1, le=20)
+    forceModel: str | None = None
+
+
+class EventSummary(BaseModel):
+    eventId: str
+    canonicalTitle: str
+    canonicalSummary: str | None = None
+    sources: list[str] = Field(default_factory=list)
+    firstSeenAt: datetime | None = None
+    lastSeenAt: datetime | None = None
+    topicId: str | None = None
+    topicName: str | None = None
+    topImportanceLevel: str | None = None
+    topRelevanceScore: int | None = None
+    hotspotCount: int | None = None
+    sourceCount: int | None = None
+    triageStatus: TriageStatus | None = None
+    currentFollowUpStatus: str | None = None
+    currentFollowUpNote: str | None = None
+
+
+class AggregateHintRequest(BaseModel):
+    newHotspot: RawDocument
+    candidateEvents: list[EventSummary] = Field(min_length=1)
+    forceModel: str | None = None
+
+
+class TriageHintRequest(BaseModel):
+    event: EventSummary
+    forceModel: str | None = None
+
+
 # ----------------------------------------------------------------------
 # Token / trace metadata
 # ----------------------------------------------------------------------
@@ -87,6 +156,18 @@ class TokenUsage(BaseModel):
     promptTokens: int = 0
     completionTokens: int = 0
     totalTokens: int = 0
+
+
+class EmbedVector(BaseModel):
+    text: str
+    vector: list[float] = Field(default_factory=list)
+
+
+class EmbedResponse(BaseModel):
+    model: str
+    dimension: int
+    items: list[EmbedVector] = Field(default_factory=list)
+    traceId: str | None = None
 
 
 # ----------------------------------------------------------------------
@@ -239,6 +320,54 @@ class SummarizeResult(BaseModel):
     promptVersion: str
     latencyMs: int = 0
     tokenUsage: TokenUsage = Field(default_factory=TokenUsage)
+    traceId: str | None = None
+
+
+class JudgeBatchResultItem(BaseModel):
+    rawDocumentId: str
+    result: JudgementResult
+
+
+class JudgeBatchResult(BaseModel):
+    results: list[JudgeBatchResultItem] = Field(default_factory=list)
+    totalLatencyMs: int = 0
+    successCount: int = 0
+    partialCount: int = 0
+
+
+class ExpandResult(BaseModel):
+    expandedKeywords: list[str] = Field(default_factory=list)
+    model: str
+    promptVersion: str
+    latencyMs: int = 0
+    traceId: str | None = None
+
+
+class AggregateHintResult(BaseModel):
+    decision: AggregateHintVerdict
+    matchedEventId: str | None = None
+    confidence: float = Field(ge=0.0, le=1.0)
+    reasoning: str
+    alternativeMatches: list[str] = Field(default_factory=list)
+    model: str
+    promptVersion: str
+    latencyMs: int = 0
+    traceId: str | None = None
+
+
+class TriageHintAlternative(BaseModel):
+    status: TriageStatus
+    score: float = Field(ge=0.0, le=1.0)
+
+
+class TriageHintResult(BaseModel):
+    recommendedTriageStatus: TriageStatus
+    confidence: float = Field(ge=0.0, le=1.0)
+    reasoning: str
+    alternativeStatuses: list[TriageHintAlternative] = Field(default_factory=list)
+    model: str
+    promptVersion: str
+    latencyMs: int = 0
     traceId: str | None = None
 
 

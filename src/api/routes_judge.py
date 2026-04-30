@@ -5,7 +5,9 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, status
 
 from src.chains.l1_singleshot import run_judge
-from src.common.models import JudgementResult, JudgeRequest
+from src.chains.l2_rag import run_judge_l2
+from src.common.config import get_settings
+from src.common.models import JudgementLayer, JudgementResult, JudgeRequest
 from src.llm.client import (
     ModelUnavailableError,
     UnsupportedModelError,
@@ -19,6 +21,9 @@ router = APIRouter()
 @router.post("/judge", response_model=JudgementResult)
 async def judge(request: JudgeRequest) -> JudgementResult:
     try:
+        requested_layer = request.forceLayer or JudgementLayer(get_settings().brain_default_layer)
+        if requested_layer is JudgementLayer.L2:
+            return await run_judge_l2(request)
         return await run_judge(request)
     except UnsupportedModelError as exc:
         raise HTTPException(
