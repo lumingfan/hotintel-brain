@@ -1,5 +1,7 @@
 # HotIntel Brain
 
+[中文说明](README.zh-CN.md)
+
 HotIntel Brain is the LLM / RAG / agent sidecar for HotPulse. It receives `raw_document` or `event` context from the main product, produces structured intelligence outputs, and degrades safely back to conservative behavior when models, retrieval, or tool chains are unavailable.
 
 Current scope:
