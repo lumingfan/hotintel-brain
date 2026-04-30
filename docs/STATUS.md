@@ -1,12 +1,34 @@
 # llm-project 状态
 
-最近更新：2026-04-29（V1 第二批收口中）
+最近更新：2026-04-30（L3 implemented + product path integrated）
 项目代号：`HotIntel Brain`
 目标：作为 HotPulse 的 intelligence 层供给方，提供热点研判 / RAG / Agent 编排服务，以及 V4 feedback 自我改进闭环
 
 ## 当前里程碑
 
 - 副项目方向已锁定，废弃此前"独立科研任务"设想
+- **L3 单 Agent follow-up intelligence 已落地（2026-04-30）**：
+  - 已新增：
+    - `src/chains/l3_agent.py`
+    - `src/api/routes_follow_up_hint.py`
+    - `src/tools/expand_keyword.py`
+    - `src/tools/search_history.py`
+    - `src/tools/fetch_doc.py`
+    - `src/tools/score_one.py`
+    - `prompts/follow_up_hint_v1.md`
+  - 已补齐：
+    - `POST /v1/follow-up-hint`
+    - 单 Agent + 4 tools + `UsageLimits`
+    - per-tool call caps
+    - fallbackUsed / fallbackReason 语义
+    - Langfuse trace / prompt version 包装
+    - `tests/test_follow_up_hint.py`
+    - `tests/test_l3_agent.py`
+  - 已完成验证：
+    - `source .venv/bin/activate && pytest -q`
+    - `source .venv/bin/activate && ruff check src tests`
+  - 与主项目联动：
+    - `fullstack-product` 的 `T-036` 已接回 event detail 真实产品路径
 - **V1 第一批骨架已落地（2026-04-27 第四轮）**：可运行的 `pytest` + `uvicorn`，`/v1/health` 端点工作，无需任何 API key 即可跑通
 - **V1 第二批已启动（2026-04-29）**：
   - `src/api/routes_judge.py` 已落地，`POST /v1/judge` 可返回 `503 MODEL_UNAVAILABLE`（无 key）或成功透传 chain 结果

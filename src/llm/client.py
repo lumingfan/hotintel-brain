@@ -6,14 +6,16 @@ first structured-output entrypoint for `POST /v1/judge`.
 
 from __future__ import annotations
 
+import importlib
+import importlib.machinery
+import sys
+import types
 from dataclasses import dataclass
 from enum import StrEnum
 from time import perf_counter
 from typing import Any, TypeVar
 
-import instructor
 import litellm
-from instructor.core import InstructorRetryException, ValidationError
 from litellm import acompletion
 from pydantic import BaseModel
 
@@ -116,6 +118,31 @@ class TriageHintOutput(BaseModel):
 
 
 StructuredResponseModelT = TypeVar("StructuredResponseModelT", bound=BaseModel)
+
+
+def _ensure_mistralai_importable() -> None:
+    try:
+        import mistralai  # type: ignore[import-not-found]
+
+        if getattr(mistralai, "Mistral", None) is not None:
+            return
+    except Exception:
+        pass
+
+    module = types.ModuleType("mistralai")
+    module.__spec__ = importlib.machinery.ModuleSpec("mistralai", loader=None)
+
+    class Mistral:  # pragma: no cover - compatibility shim
+        pass
+
+    module.Mistral = Mistral
+    sys.modules["mistralai"] = module
+
+
+_ensure_mistralai_importable()
+instructor = importlib.import_module("instructor")
+InstructorRetryException = importlib.import_module("instructor.core").InstructorRetryException
+ValidationError = importlib.import_module("instructor.core").ValidationError
 
 
 def supported_model_names() -> list[str]:

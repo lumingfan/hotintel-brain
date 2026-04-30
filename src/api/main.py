@@ -10,6 +10,7 @@ from src import __version__
 from src.api.routes_aggregate_hint import router as aggregate_hint_router
 from src.api.routes_embed import router as embed_router
 from src.api.routes_expand import router as expand_router
+from src.api.routes_follow_up_hint import router as follow_up_hint_router
 from src.api.routes_health import router as health_router
 from src.api.routes_judge import router as judge_router
 from src.api.routes_judge_batch import router as judge_batch_router
@@ -43,6 +44,7 @@ def create_app() -> FastAPI:
     app.include_router(expand_router, prefix="/v1")
     app.include_router(aggregate_hint_router, prefix="/v1")
     app.include_router(triage_hint_router, prefix="/v1")
+    app.include_router(follow_up_hint_router, prefix="/v1")
     return app
 
 

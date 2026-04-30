@@ -57,6 +57,14 @@ class TriageStatus(StrEnum):
     ARCHIVED = "ARCHIVED"
 
 
+class FollowUpStatus(StrEnum):
+    NONE = "NONE"
+    WATCHING = "WATCHING"
+    LATER = "LATER"
+    NEEDS_FOLLOW_UP = "NEEDS_FOLLOW_UP"
+    RESOLVED = "RESOLVED"
+
+
 # ----------------------------------------------------------------------
 # Inputs
 # ----------------------------------------------------------------------
@@ -127,12 +135,14 @@ class EventSummary(BaseModel):
     lastSeenAt: datetime | None = None
     topicId: str | None = None
     topicName: str | None = None
+    primaryKeyword: str | None = None
+    expandedKeywords: list[str] = Field(default_factory=list)
     topImportanceLevel: str | None = None
     topRelevanceScore: int | None = None
     hotspotCount: int | None = None
     sourceCount: int | None = None
     triageStatus: TriageStatus | None = None
-    currentFollowUpStatus: str | None = None
+    currentFollowUpStatus: FollowUpStatus | None = None
     currentFollowUpNote: str | None = None
 
 
@@ -143,6 +153,11 @@ class AggregateHintRequest(BaseModel):
 
 
 class TriageHintRequest(BaseModel):
+    event: EventSummary
+    forceModel: str | None = None
+
+
+class FollowUpHintRequest(BaseModel):
     event: EventSummary
     forceModel: str | None = None
 
@@ -369,6 +384,26 @@ class TriageHintResult(BaseModel):
     promptVersion: str
     latencyMs: int = 0
     traceId: str | None = None
+
+
+class FollowUpHintOutput(BaseModel):
+    recommendedFollowUpStatus: FollowUpStatus
+    suggestedActions: list[str] = Field(default_factory=list, min_length=1, max_length=3)
+    confidence: float = Field(ge=0.0, le=1.0)
+    reasoning: str
+
+
+class FollowUpHintResult(BaseModel):
+    recommendedFollowUpStatus: FollowUpStatus
+    suggestedActions: list[str] = Field(default_factory=list, min_length=1, max_length=3)
+    confidence: float = Field(ge=0.0, le=1.0)
+    reasoning: str
+    model: str
+    promptVersion: str
+    latencyMs: int = 0
+    traceId: str | None = None
+    fallbackUsed: bool = False
+    fallbackReason: str | None = None
 
 
 # ----------------------------------------------------------------------

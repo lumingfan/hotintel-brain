@@ -16,6 +16,9 @@ from src.common.models import (
     EventSummary,
     ExpandRequest,
     ExpandResult,
+    FollowUpHintRequest,
+    FollowUpHintResult,
+    FollowUpStatus,
     ImportanceLevel,
     JudgeBatchItem,
     JudgeBatchRequest,
@@ -281,3 +284,32 @@ def test_triage_hint_result_supports_recommendation() -> None:
         latencyMs=77,
     )
     assert result.recommendedTriageStatus is TriageStatus.CONFIRMED
+
+
+def test_follow_up_hint_request_accepts_event_summary() -> None:
+    request = FollowUpHintRequest(
+        event=EventSummary(
+            eventId="evt_001",
+            topicId="tp_001",
+            topicName="AI Coding Models",
+            canonicalTitle="Claude Code remote MCP support",
+            canonicalSummary="Anthropic shipped it.",
+            sources=["hackernews"],
+            triageStatus=TriageStatus.REVIEWING,
+            currentFollowUpStatus=FollowUpStatus.NONE,
+        )
+    )
+    assert request.event.currentFollowUpStatus is FollowUpStatus.NONE
+
+
+def test_follow_up_hint_result_caps_actions() -> None:
+    with pytest.raises(ValidationError):
+        FollowUpHintResult(
+            recommendedFollowUpStatus=FollowUpStatus.NEEDS_FOLLOW_UP,
+            suggestedActions=["one", "two", "three", "four"],
+            confidence=0.8,
+            reasoning="Need more evidence before acting.",
+            model="gpt-4o-mini",
+            promptVersion="follow-up-hint-v1.0",
+            fallbackUsed=False,
+        )

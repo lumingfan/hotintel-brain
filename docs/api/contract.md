@@ -379,12 +379,18 @@ HotPulse 收到 `partial=true` 后走规则 fallback。
   "event": {
     "eventId": "evt_001",
     "topicId": "tp_001",
+    "topicName": "AI Coding Models",
+    "primaryKeyword": "Claude Code",
+    "expandedKeywords": ["Anthropic MCP"],
     "canonicalTitle": "Claude Sonnet 4.6 发布",
     "canonicalSummary": "...",
-    "triageStatus": "CONFIRMED",
-    "currentFollowUpStatus": "WATCHING",
-    "currentFollowUpNote": "继续观察。",
+    "triageStatus": "REVIEWING",
+    "currentFollowUpStatus": "NONE",
+    "currentFollowUpNote": "",
     "hotspotCount": 4,
+    "sourceCount": 2,
+    "topRelevanceScore": 58,
+    "sources": ["hackernews", "weibo"],
     "lastSeenAt": "2026-04-17T12:00:00Z"
   },
   "forceModel": null
@@ -405,9 +411,20 @@ HotPulse 收到 `partial=true` 后走规则 fallback。
   "model": "gpt-4o-mini",
   "promptVersion": "follow-up-hint-v1.0",
   "latencyMs": 780,
-  "traceId": "br_2026..."
+  "traceId": "br_2026...",
+  "fallbackUsed": false,
+  "fallbackReason": null
 }
 ```
+
+说明：
+
+- `suggestedActions` 最多返回 3 条
+- 运行时受限于：
+  - `request_limit = 6`
+  - `tool_calls_limit = 6`
+  - `total_tokens_limit = 2000`
+- 任一超预算、tool 异常、retrieval / fetch 为空、结构化输出失败或 provider 异常，都会返回 `200` + 保守 fallback，而不是把产品链路打成 `500`
 
 ---
 

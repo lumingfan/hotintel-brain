@@ -7,9 +7,11 @@ requires-python = ">=3.11,<3.13"
 license = { text = "Proprietary" }
 authors = [{ name = "lumingfan" }]
 
-# V1 dependencies. Keep this short.
-# - LLM provider scope follows ADR 0006 (GPT + Claude only).
-# - RAG / Pydantic AI / DeepEval are deferred to V2/V3 and intentionally NOT in V1.
+# Runtime dependencies reflect the repo's current implemented scope:
+# - V1: structured LLM calls
+# - V2: retrieval / embeddings / reranking
+# - V3: single-agent follow-up hint
+# Keep model provider scope aligned with ADR 0006 (GPT + Claude only).
 dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
@@ -23,6 +25,11 @@ dependencies = [
     "httpx>=0.27",
     "pymysql>=1.1",
     "python-dotenv>=1.0",
+    "pydantic-ai>=1.88",
+    "elasticsearch>=8.15",
+    "sentence-transformers>=3.3",
+    "torch>=2.5",
+    "aio-pika>=9.5",
 ]
 
 [project.optional-dependencies]
@@ -33,9 +40,6 @@ dev = [
     "ruff>=0.7",
     "mypy>=1.13",
 ]
-
-# V2 / V3 / V4 will add their own optional groups (rag / agent / eval / feedback)
-# but we intentionally don't install them in V1.
 
 [build-system]
 requires = ["hatchling"]
