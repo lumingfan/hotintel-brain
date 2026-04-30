@@ -55,6 +55,8 @@ async def test_brain_consumer_processes_request_and_publishes_completed() -> Non
     await consumer.handle(
         BrainJudgeRequestedMessage(
             jobId="job_001",
+            hotspotId="hs_001",
+            rawDocumentId="rd_001",
             topicId="tp_001",
             rawDocument=RawDocument(
                 id="rd_001",
@@ -73,5 +75,7 @@ async def test_brain_consumer_processes_request_and_publishes_completed() -> Non
     assert len(publisher.messages) == 1
     completed = publisher.messages[0]
     assert completed.jobId == "job_001"
+    assert completed.hotspotId == "hs_001"
+    assert completed.rawDocumentId == "rd_001"
     assert completed.routing_key == "hotintel.judge.completed"
     assert completed.result.summary == "mq summary"

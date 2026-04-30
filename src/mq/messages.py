@@ -9,6 +9,8 @@ from src.common.models import JudgementResult, JudgeRequest, RawDocument, TopicC
 
 class BrainJudgeRequestedMessage(BaseModel):
     jobId: str
+    hotspotId: str | None = None
+    rawDocumentId: str | None = None
     topicId: str
     rawDocument: RawDocument
     topicContext: TopicContext
@@ -26,6 +28,8 @@ class BrainJudgeRequestedMessage(BaseModel):
 
 class BrainJudgeCompletedMessage(BaseModel):
     jobId: str
+    hotspotId: str | None = None
+    rawDocumentId: str | None = None
     topicId: str
     result: JudgementResult
     routing_key: str = "hotintel.judge.completed"

@@ -24,6 +24,8 @@ class BrainJudgeConsumer:
         result = await self.judge_runner(request)
         completed = BrainJudgeCompletedMessage(
             jobId=message.jobId,
+            hotspotId=message.hotspotId,
+            rawDocumentId=message.rawDocumentId or message.rawDocument.id,
             topicId=message.topicId,
             result=result,
         )
