@@ -1,6 +1,8 @@
 # HotIntel Brain
 
-[中文说明](README.zh-CN.md)
+**Language:** [English](README.md) | [简体中文](README.zh-CN.md)
+
+**Quick Links:** [Endpoints](#endpoints) · [Prerequisites](#prerequisites) · [Installation](#installation) · [Configuration](#configuration) · [Quick Start](#quick-start) · [Verification](#verification)
 
 HotIntel Brain is the LLM / RAG / agent sidecar for HotPulse. It receives `raw_document` or `event` context from the main product, produces structured intelligence outputs, and degrades safely back to conservative behavior when models, retrieval, or tool chains are unavailable.
 
@@ -10,6 +12,7 @@ Current scope:
 - L2 retrieval-augmented expansion / aggregation / triage hints
 - L3 single-agent follow-up hint with strict budgets and fallback
 
+<a id="endpoints"></a>
 ## What This Service Exposes
 
 HTTP endpoints currently implemented:
@@ -54,6 +57,7 @@ Rules of engagement:
 - HotPulse owns the user workflow and fallback semantics
 - Brain owns prompts, schemas, retrieval, agent budgets, and structured outputs
 
+<a id="prerequisites"></a>
 ## Prerequisites
 
 For actual local use, assume:
@@ -77,6 +81,7 @@ Optional but commonly needed:
   - `models/bge-m3`
   - `models/bge-reranker-v2-m3`
 
+<a id="installation"></a>
 ## Installation
 
 ```bash
@@ -94,6 +99,7 @@ cp .env.example .env
 
 Template: [.env.example](/Users/lumingfan/postgraduate/tasks/vibe-coding/internship-portfolio/llm-project/.env.example)
 
+<a id="configuration"></a>
 ## Configuration
 
 ### Core runtime
@@ -155,6 +161,7 @@ Typical local setup:
 - start Elasticsearch from `fullstack-product/docker compose`
 - point `BRAIN_ES_URL` to `http://localhost:9200`
 
+<a id="quick-start"></a>
 ## Quick Start
 
 ### A. Skeleton mode
@@ -216,6 +223,7 @@ HOTINTEL_BRAIN_FOLLOW_UP_HINT_ENABLED=true
    - L1/L2 paths from scan / summarize
    - L3 follow-up suggestion inside event detail
 
+<a id="verification"></a>
 ## Verification
 
 ### Automated verification

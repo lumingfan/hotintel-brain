@@ -1,6 +1,8 @@
 # HotIntel Brain
 
-[English](README.md)
+**Language:** [English](README.md) | [简体中文](README.zh-CN.md)
+
+**快速导航：** [已实现接口](#zh-endpoints) · [环境要求](#zh-prerequisites) · [安装](#zh-installation) · [配置说明](#zh-configuration) · [快速启动](#zh-quick-start) · [验证方式](#zh-verification)
 
 `HotIntel Brain` 是 `HotPulse` 的大模型 / RAG / agent 侧车服务。它接收主产品传来的 `raw_document` 或 `event` 上下文，输出结构化 intelligence 结果，并在模型、检索或工具链不可用时安全降级到保守 fallback。
 
@@ -10,6 +12,7 @@
 - L2 检索增强的 expand / aggregate / triage hint
 - L3 单 Agent follow-up hint，带严格 budget 与 fallback
 
+<a id="zh-endpoints"></a>
 ## 当前已实现的接口
 
 目前已实现的 HTTP endpoint：
@@ -54,6 +57,7 @@ HotPulse collector / scan -> raw_document
 - HotPulse 负责用户工作流与最终降级语义
 - Brain 负责 prompt、schema、retrieval、agent budget 和结构化输出
 
+<a id="zh-prerequisites"></a>
 ## 环境要求
 
 本地使用时，至少假设你有：
@@ -77,6 +81,7 @@ HotPulse collector / scan -> raw_document
   - `models/bge-m3`
   - `models/bge-reranker-v2-m3`
 
+<a id="zh-installation"></a>
 ## 安装
 
 ```bash
@@ -96,6 +101,7 @@ cp .env.example .env
 
 - [.env.example](/Users/lumingfan/postgraduate/tasks/vibe-coding/internship-portfolio/llm-project/.env.example)
 
+<a id="zh-configuration"></a>
 ## 配置说明
 
 ### 核心运行时
@@ -157,6 +163,7 @@ BRAIN_ES_PASS=
 - 从 `fullstack-product/docker compose` 启 Elasticsearch
 - 然后把 `BRAIN_ES_URL` 指到 `http://localhost:9200`
 
+<a id="zh-quick-start"></a>
 ## 快速启动
 
 ### A. Skeleton 模式
@@ -218,6 +225,7 @@ HOTINTEL_BRAIN_FOLLOW_UP_HINT_ENABLED=true
    - L1 / L2 scan / summarize 路径
    - L3 event detail 中的 follow-up suggestion
 
+<a id="zh-verification"></a>
 ## 验证方式
 
 ### 自动化验证
