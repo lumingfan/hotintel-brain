@@ -4,6 +4,13 @@
 
 **快速导航：** [已实现接口](#zh-endpoints) · [环境要求](#zh-prerequisites) · [安装](#zh-installation) · [配置说明](#zh-configuration) · [快速启动](#zh-quick-start) · [验证方式](#zh-verification)
 
+![状态](https://img.shields.io/badge/status-active-2f855a)
+![Python](https://img.shields.io/badge/Python-3.11-3776ab)
+![FastAPI](https://img.shields.io/badge/FastAPI-LLM_Service-009688)
+![Pydantic AI](https://img.shields.io/badge/Pydantic_AI-L3_Agent-8b5cf6)
+![Elasticsearch](https://img.shields.io/badge/Elasticsearch-shared_RAG-f59e0b)
+![License](https://img.shields.io/badge/license-private-6b7280)
+
 `HotIntel Brain` 是 `HotPulse` 的大模型 / RAG / agent 侧车服务。它接收主产品传来的 `raw_document` 或 `event` 上下文，输出结构化 intelligence 结果，并在模型、检索或工具链不可用时安全降级到保守 fallback。
 
 当前仓库范围：
@@ -41,6 +48,46 @@
    - 接到 `fullstack-product`
    - 复用 HotPulse 的 Elasticsearch 与本地 embedding / reranker 模型
    - 在真实产品页面里验证 L2 / L3 行为
+
+## 架构快照
+
+```mermaid
+flowchart LR
+    HotPulse["HotPulse 后端"] --> Judge["/v1/judge"]
+    HotPulse --> Summarize["/v1/summarize"]
+    HotPulse --> Hints["/v1/expand | /v1/aggregate-hint | /v1/triage-hint | /v1/follow-up-hint"]
+    Judge --> Chains["L1 / L2 / L3 Chain"]
+    Summarize --> Chains
+    Hints --> Chains
+    Chains --> LLM["OpenAI-compatible / Anthropic"]
+    Chains --> ES["共享 Elasticsearch"]
+    Chains --> Models["本地 Embedding / Reranker 模型"]
+    Chains --> Langfuse["Langfuse Trace"]
+```
+
+## Demo 亮点
+
+- 结构化的 L1 judgement / summarize
+- 带 retrieval 的 L2 expand / aggregate / triage hint
+- 带 request/tool/token budget 的 L3 单 Agent follow-up hint
+- 面向产品可用性的 fallback 语义
+- 已真实接回 HotPulse event detail
+
+## 截图 / 演示说明
+
+这个仓库本身更偏向基础设施、契约和 chain 编排，所以最有价值的演示不是独立 UI，而是它在主产品中的接入路径。
+
+最适合观察 Brain 行为的入口：
+
+- `GET /v1/health`：看运行状态
+- `POST /v1/judge` / `POST /v1/summarize`：看 L1 行为
+- `POST /v1/follow-up-hint`：看 L3 行为
+- HotPulse event detail：看最终用户侧的 L3 体验
+
+推荐配合：
+
+- [docs/runbooks/local-dev.md](/Users/lumingfan/postgraduate/tasks/vibe-coding/internship-portfolio/llm-project/docs/runbooks/local-dev.md)
+- [fullstack-product 手动验证 runbook](/Users/lumingfan/postgraduate/tasks/vibe-coding/internship-portfolio/fullstack-product/docs/runbooks/project-manual-verification-and-demo.md)
 
 ## 与 HotPulse 的关系
 

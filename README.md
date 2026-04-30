@@ -4,6 +4,13 @@
 
 **Quick Links:** [Endpoints](#endpoints) · [Prerequisites](#prerequisites) · [Installation](#installation) · [Configuration](#configuration) · [Quick Start](#quick-start) · [Verification](#verification)
 
+![Status](https://img.shields.io/badge/status-active-2f855a)
+![Python](https://img.shields.io/badge/Python-3.11-3776ab)
+![FastAPI](https://img.shields.io/badge/FastAPI-LLM_Service-009688)
+![Pydantic AI](https://img.shields.io/badge/Pydantic_AI-L3_Agent-8b5cf6)
+![Elasticsearch](https://img.shields.io/badge/Elasticsearch-shared_RAG-f59e0b)
+![License](https://img.shields.io/badge/license-private-6b7280)
+
 HotIntel Brain is the LLM / RAG / agent sidecar for HotPulse. It receives `raw_document` or `event` context from the main product, produces structured intelligence outputs, and degrades safely back to conservative behavior when models, retrieval, or tool chains are unavailable.
 
 Current scope:
@@ -41,6 +48,46 @@ The service is designed to be useful in three modes:
    - connect Brain to `fullstack-product`
    - reuse HotPulse Elasticsearch and local embedding / reranker models
    - verify L2/L3 behavior from real product pages
+
+## Architecture Snapshot
+
+```mermaid
+flowchart LR
+    HotPulse["HotPulse Backend"] --> Judge["/v1/judge"]
+    HotPulse --> Summarize["/v1/summarize"]
+    HotPulse --> Hints["/v1/expand | /v1/aggregate-hint | /v1/triage-hint | /v1/follow-up-hint"]
+    Judge --> Chains["L1 / L2 / L3 Chains"]
+    Summarize --> Chains
+    Hints --> Chains
+    Chains --> LLM["OpenAI-compatible / Anthropic"]
+    Chains --> ES["Shared Elasticsearch"]
+    Chains --> Models["Local Embedding / Reranker Models"]
+    Chains --> Langfuse["Langfuse Trace"]
+```
+
+## Demo Highlights
+
+- Structured L1 judgement and summarize endpoints
+- L2 retrieval-augmented expansion, aggregation, and triage hints
+- L3 single-agent follow-up hint with strict request/tool/token budgets
+- Product-safe fallback semantics for model, retrieval, and tool failures
+- Real integration path back into HotPulse event detail
+
+## Screenshots / Demo
+
+This repository is primarily infrastructure-and-contract oriented, so the most useful “demo” is the product integration path rather than a standalone UI.
+
+Best places to see Brain behavior:
+
+- `GET /v1/health` for runtime readiness
+- `POST /v1/judge` / `POST /v1/summarize` for L1 behavior
+- `POST /v1/follow-up-hint` for L3 behavior
+- HotPulse event detail page for the end-user L3 experience
+
+Recommended walkthrough:
+
+- [docs/runbooks/local-dev.md](/Users/lumingfan/postgraduate/tasks/vibe-coding/internship-portfolio/llm-project/docs/runbooks/local-dev.md)
+- [fullstack-product manual verification runbook](/Users/lumingfan/postgraduate/tasks/vibe-coding/internship-portfolio/fullstack-product/docs/runbooks/project-manual-verification-and-demo.md)
 
 ## Relationship To HotPulse
 
