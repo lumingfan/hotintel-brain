@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import sys
 from functools import lru_cache
 
 from pydantic import Field
@@ -68,4 +70,9 @@ class Settings(BaseSettings):
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     """Cached settings singleton. Tests can monkeypatch env then call cache_clear."""
-    return Settings()
+    env_file = os.environ.get("BRAIN_ENV_FILE")
+    if env_file is None:
+        env_file = "" if "pytest" in sys.modules else ".env"
+    if env_file == "":
+        return Settings(_env_file=None)
+    return Settings(_env_file=env_file)

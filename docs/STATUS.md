@@ -1,12 +1,29 @@
 # llm-project 状态
 
-最近更新：2026-04-30（L3 implemented + product path integrated）
+最近更新：2026-05-06（real local API / ES validation）
 项目代号：`HotIntel Brain`
 目标：作为 HotPulse 的 intelligence 层供给方，提供热点研判 / RAG / Agent 编排服务，以及 V4 feedback 自我改进闭环
 
 ## 当前里程碑
 
 - 副项目方向已锁定，废弃此前"独立科研任务"设想
+- **真实本地 API / ES 验证已补齐（2026-05-06）**：
+  - 已在本机 `llm-project/.env` 中配置真实 OpenAI-compatible 本地网关与本地 ES（文件 gitignored，不提交密钥）。
+  - `GET /v1/health` 已确认 `modelReachable=true`、`esReachable=true`，Langfuse 因未配置 key 仍为 `false`。
+  - 真实模型调用已覆盖：
+    - `POST /v1/judge` L1
+    - `POST /v1/judge` L2
+    - `POST /v1/summarize`
+    - `POST /v1/expand`
+    - `POST /v1/aggregate-hint`
+    - `POST /v1/triage-hint`
+    - `POST /v1/follow-up-hint`
+    - `POST /v1/embed`
+  - 本轮发现并修复：Python `elasticsearch` client 9.x 会向 HotPulse 本地 ES 8.13 发送 `compatible-with=9` header，导致 L2 RAG ES 检索 400 并回退 L1；已将依赖约束为 `elasticsearch>=8.15,<9`，本地降级到 `8.19.3` 后 L2 返回 `layer=L2`。
+  - HotPulse 正式 reindex API 已验证可通过 Brain `/v1/embed` 为 `hotspot_search` 写入 `dense_vector`：demo topic `工作流` 重建后 53 条文档具备 `embedding`、`embeddingModel=models/bge-m3`、`embeddingDimension=1024`。
+  - Brain retriever 已验证可从本地 ES 返回 BM25 + dense candidates，并完成 rerank。
+  - HotPulse event detail 的 `follow-up-hint` 正式 API 已在真实模型下返回 `fallbackUsed=false` 的建议；Langfuse trace 仍待配置 key 后补验。
+  - 测试隔离已补齐：`BRAIN_ENV_FILE=""` 可禁用 `.env` 读取，避免真实本地密钥影响无 key 单测。
 - **L3 单 Agent follow-up intelligence 已落地（2026-04-30）**：
   - 已新增：
     - `src/chains/l3_agent.py`
