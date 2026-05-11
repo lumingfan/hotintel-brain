@@ -222,8 +222,8 @@ def _fallback_status(event: EventSummary) -> FollowUpStatus:
 
 def _fallback_action(status: FollowUpStatus) -> str:
     if status is FollowUpStatus.WATCHING:
-        return "Keep the event on watch and wait for another strong source before escalating manual follow-up."
-    return "Park the event for later review until more evidence accumulates."
+        return "继续观察该事件, 等待更多可靠来源后再升级人工跟进。"
+    return "暂缓处理该事件, 等更多证据积累后再复核。"
 
 
 def _classify_error(exception: Exception) -> str:
@@ -261,7 +261,7 @@ def _fallback_result(
         recommendedFollowUpStatus=status,
         suggestedActions=[_fallback_action(status)],
         confidence=0.35,
-        reasoning="The agent fell back to the conservative path because the L3 reasoning loop could not complete safely.",
+        reasoning="由于 L3 推理链路未能安全完成, 系统已回退到保守跟进建议。",
         model=model_name,
         promptVersion=prompt_version,
         latencyMs=latency_ms,
@@ -274,7 +274,7 @@ def _fallback_result(
 async def run_follow_up_hint(request: FollowUpHintRequest) -> FollowUpHintResult:
     settings = get_settings()
     model_name = request.forceModel or settings.brain_default_model
-    prompt = get_prompt_definition("follow-up-hint", _PROMPT_PATH, "follow-up-hint-v1.0")
+    prompt = get_prompt_definition("follow-up-hint", _PROMPT_PATH, "follow-up-hint-v1.1")
     user_prompt = _render_user_prompt(request)
     deps = FollowUpAgentDeps(request=request)
     started_at = perf_counter()

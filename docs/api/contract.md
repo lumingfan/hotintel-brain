@@ -356,11 +356,16 @@ HotPulse 收到 `partial=true` 后走规则 fallback。
     {"status": "REVIEWING", "score": 0.14}
   ],
   "model": "gpt-4o-mini",
-  "promptVersion": "triage-hint-v1.0",
+  "promptVersion": "triage-hint-v1.1",
   "latencyMs": 600,
   "traceId": "br_2026..."
 }
 ```
+
+说明：
+
+- `recommendedTriageStatus` 保持枚举值
+- `reasoning` 是面向 HotPulse 用户展示的简体中文文案
 
 ---
 
@@ -409,7 +414,7 @@ HotPulse 收到 `partial=true` 后走规则 fallback。
   "confidence": 0.74,
   "reasoning": "事件已 confirmed 且来源跨度大，具备进一步归档前的核验价值。",
   "model": "gpt-4o-mini",
-  "promptVersion": "follow-up-hint-v1.0",
+  "promptVersion": "follow-up-hint-v1.1",
   "latencyMs": 780,
   "traceId": "br_2026...",
   "fallbackUsed": false,
@@ -420,6 +425,7 @@ HotPulse 收到 `partial=true` 后走规则 fallback。
 说明：
 
 - `suggestedActions` 最多返回 3 条
+- `suggestedActions` 和 `reasoning` 是面向 HotPulse 用户展示的简体中文文案
 - 运行时受限于：
   - `request_limit = 6`
   - `tool_calls_limit = 6`

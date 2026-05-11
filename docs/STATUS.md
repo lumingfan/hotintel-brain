@@ -6,6 +6,10 @@
 
 ## 当前里程碑
 
+- **AI 建议中文化收口（2026-05-12）**：
+  - `triage-hint` prompt 升级到 `triage-hint-v1.1`，明确 `reasoning` 必须返回面向 HotPulse 用户的简体中文文案，枚举字段仍保持英文 contract 值。
+  - `follow-up-hint` prompt 升级到 `follow-up-hint-v1.1`，明确 `suggestedActions` 与 `reasoning` 必须返回简体中文；L3 fallback 文案同步改为中文。
+  - 回归覆盖：`BRAIN_ENV_FILE="" pytest -q tests/test_triage_hint.py tests/test_l3_agent.py`。
 - 副项目方向已锁定，废弃此前"独立科研任务"设想
 - **真实本地 API / ES 验证已补齐（2026-05-06）**：
   - 已在本机 `llm-project/.env` 中配置真实 OpenAI-compatible 本地网关与本地 ES（文件 gitignored，不提交密钥）。

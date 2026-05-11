@@ -17,7 +17,7 @@ from typing import Any, TypeVar
 
 import litellm
 from litellm import acompletion
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.common.config import get_settings
 from src.common.models import (
@@ -113,7 +113,7 @@ class AggregateHintOutput(BaseModel):
 class TriageHintOutput(BaseModel):
     recommendedTriageStatus: TriageStatus
     confidence: float
-    reasoning: str
+    reasoning: str = Field(description="User-facing triage reasoning in Simplified Chinese.")
     alternativeStatuses: list[TriageHintAlternative] = []
 
 

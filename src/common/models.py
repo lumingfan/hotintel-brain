@@ -378,7 +378,7 @@ class TriageHintAlternative(BaseModel):
 class TriageHintResult(BaseModel):
     recommendedTriageStatus: TriageStatus
     confidence: float = Field(ge=0.0, le=1.0)
-    reasoning: str
+    reasoning: str = Field(description="User-facing triage reasoning in Simplified Chinese.")
     alternativeStatuses: list[TriageHintAlternative] = Field(default_factory=list)
     model: str
     promptVersion: str
@@ -388,16 +388,26 @@ class TriageHintResult(BaseModel):
 
 class FollowUpHintOutput(BaseModel):
     recommendedFollowUpStatus: FollowUpStatus
-    suggestedActions: list[str] = Field(default_factory=list, min_length=1, max_length=3)
+    suggestedActions: list[str] = Field(
+        default_factory=list,
+        min_length=1,
+        max_length=3,
+        description="User-facing follow-up action suggestions in Simplified Chinese.",
+    )
     confidence: float = Field(ge=0.0, le=1.0)
-    reasoning: str
+    reasoning: str = Field(description="User-facing follow-up reasoning in Simplified Chinese.")
 
 
 class FollowUpHintResult(BaseModel):
     recommendedFollowUpStatus: FollowUpStatus
-    suggestedActions: list[str] = Field(default_factory=list, min_length=1, max_length=3)
+    suggestedActions: list[str] = Field(
+        default_factory=list,
+        min_length=1,
+        max_length=3,
+        description="User-facing follow-up action suggestions in Simplified Chinese.",
+    )
     confidence: float = Field(ge=0.0, le=1.0)
-    reasoning: str
+    reasoning: str = Field(description="User-facing follow-up reasoning in Simplified Chinese.")
     model: str
     promptVersion: str
     latencyMs: int = 0

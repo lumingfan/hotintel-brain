@@ -33,7 +33,7 @@ def _render_user_prompt(request: TriageHintRequest) -> str:
 async def run_triage_hint(request: TriageHintRequest) -> TriageHintResult:
     settings = get_settings()
     model_name = request.forceModel or settings.brain_default_model
-    prompt = get_prompt_definition("triage-hint", _PROMPT_PATH, "triage-hint-v1.0")
+    prompt = get_prompt_definition("triage-hint", _PROMPT_PATH, "triage-hint-v1.1")
     output, _, latency_ms, trace_id = await triage_hint(
         model_name=model_name,
         system_prompt=prompt.text,

@@ -68,6 +68,38 @@ def test_run_follow_up_hint_falls_back_on_usage_limit(monkeypatch: pytest.Monkey
     assert result.suggestedActions
 
 
+def test_follow_up_prompt_requires_chinese_output(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict[str, str] = {}
+
+    async def fake_execute_agent(*_args, **_kwargs):
+        raise UsageLimitExceeded("request_limit exceeded")
+
+    def fake_build_follow_up_agent(*, model_name: str, prompt_text: str):
+        captured["prompt_text"] = prompt_text
+        return object()
+
+    monkeypatch.setattr("src.chains.l3_agent._build_follow_up_agent", fake_build_follow_up_agent)
+    monkeypatch.setattr("src.chains.l3_agent._execute_agent", fake_execute_agent)
+
+    asyncio.run(run_follow_up_hint(_sample_request()))
+
+    assert "中文" in captured["prompt_text"]
+
+
+def test_run_follow_up_hint_fallback_copy_is_chinese(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def fake_execute_agent(*_args, **_kwargs):
+        raise UsageLimitExceeded("request_limit exceeded")
+
+    monkeypatch.setattr("src.chains.l3_agent._build_follow_up_agent", lambda **_kwargs: object())
+    monkeypatch.setattr("src.chains.l3_agent._execute_agent", fake_execute_agent)
+
+    result = asyncio.run(run_follow_up_hint(_sample_request()))
+
+    assert result.fallbackUsed is True
+    assert any("\u4e00" <= char <= "\u9fff" for char in result.suggestedActions[0])
+    assert any("\u4e00" <= char <= "\u9fff" for char in result.reasoning)
+
+
 def test_run_follow_up_hint_falls_back_on_tool_error(monkeypatch: pytest.MonkeyPatch) -> None:
     async def fake_execute_agent(*_args, **_kwargs):
         raise RuntimeError("tool crashed")
